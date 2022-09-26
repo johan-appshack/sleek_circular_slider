@@ -145,21 +145,51 @@ class _SleekCircularSliderState extends State<SleekCircularSlider>
       _appearanceHashCode = widget.appearance.hashCode;
       _setupPainter();
     }
-    return RawGestureDetector(
-        gestures: <Type, GestureRecognizerFactory>{
-          _CustomPanGestureRecognizer:
-              GestureRecognizerFactoryWithHandlers<_CustomPanGestureRecognizer>(
-            () => _CustomPanGestureRecognizer(
-              onPanDown: _onPanDown,
-              onPanUpdate: _onPanUpdate,
-              onPanEnd: _onPanEnd,
-            ),
-            (_CustomPanGestureRecognizer instance) {},
-          ),
-        },
-        child: _buildRotatingPainter(
-            rotation: _rotation,
-            size: Size(widget.appearance.size, widget.appearance.size)));
+    return GestureDetector(
+      onPanStart: ((details) {
+        _currentAngle = _selectedAngle ?? widget.angle;
+      }),
+      onPanUpdate: (details) {
+        if (_currentAngle! - details.delta.dy < 0) {
+          _currentAngle = 0;
+        } else if (_currentAngle! - details.delta.dy >
+            widget.appearance.angleRange) {
+          _currentAngle = widget.appearance.angleRange;
+        } else {
+          _currentAngle = _currentAngle! - details.delta.dy;
+        }
+        _painter = _CurvePainter(
+            startAngle: _startAngle,
+            angleRange: _angleRange,
+            angle: _currentAngle!,
+            appearance: widget.appearance);
+        _oldWidgetAngle = widget.angle;
+        _oldWidgetValue = widget.initialValue;
+        _updateOnChange();
+        setState(() {});
+      },
+      onPanEnd: (details) {
+        _selectedAngle = _currentAngle;
+      },
+      child: _buildRotatingPainter(
+          rotation: _rotation,
+          size: Size(widget.appearance.size, widget.appearance.size)),
+    );
+    // return RawGestureDetector(
+    //     gestures: <Type, GestureRecognizerFactory>{
+    //       _CustomPanGestureRecognizer:
+    //           GestureRecognizerFactoryWithHandlers<_CustomPanGestureRecognizer>(
+    //         () => _CustomPanGestureRecognizer(
+    //           onPanDown: _onPanDown,
+    //           onPanUpdate: _onPanUpdate,
+    //           onPanEnd: _onPanEnd,
+    //         ),
+    //         (_CustomPanGestureRecognizer instance) {},
+    //       ),
+    //     },
+    //     child: _buildRotatingPainter(
+    //         rotation: _rotation,
+    //         size: Size(widget.appearance.size, widget.appearance.size)));
   }
 
   @override
@@ -184,7 +214,7 @@ class _SleekCircularSliderState extends State<SleekCircularSlider>
         selectedAngle: _selectedAngle,
         defaultAngle: defaultAngle,
         counterClockwise: counterClockwise);
-
+    // print(_currentAngle);
     _painter = _CurvePainter(
         startAngle: _startAngle,
         angleRange: _angleRange,
@@ -261,6 +291,7 @@ class _SleekCircularSliderState extends State<SleekCircularSlider>
     if (_painter?.center == null) {
       return;
     }
+    print(details.dy);
     RenderBox renderBox = context.findRenderObject() as RenderBox;
     var position = renderBox.globalToLocal(details);
     final double touchWidth = widget.appearance.progressBarWidth >= 25.0
