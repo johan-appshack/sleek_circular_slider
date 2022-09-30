@@ -150,8 +150,8 @@ class _SleekCircularSliderState extends State<SleekCircularSlider>
         _currentAngle = _selectedAngle ?? widget.angle;
       }),
       onPanUpdate: (details) {
-        if (_currentAngle! - details.delta.dy < 0) {
-          _currentAngle = 0;
+        if (_currentAngle! - details.delta.dy <= 0) {
+          return;
         } else if (_currentAngle! - details.delta.dy >
             widget.appearance.angleRange) {
           _currentAngle = widget.appearance.angleRange;
@@ -161,15 +161,12 @@ class _SleekCircularSliderState extends State<SleekCircularSlider>
         _painter = _CurvePainter(
             startAngle: _startAngle,
             angleRange: _angleRange,
-            angle: _currentAngle!,
+            angle: _currentAngle! < 0.5 ? 0.5 : _currentAngle!,
             appearance: widget.appearance);
         _oldWidgetAngle = widget.angle;
         _oldWidgetValue = widget.initialValue;
         _updateOnChange();
         setState(() {});
-      },
-      onPanEnd: (details) {
-        _selectedAngle = _currentAngle;
       },
       child: _buildRotatingPainter(
           rotation: _rotation,
